@@ -5,7 +5,7 @@ updatehandle <- null;
 WEBPAGE <- null;
 
 // Log the URLs to turn LED on/off when agent starts
-server.log("Start the countdown by browsing to " + http.agenturl() + "?count=N&mmi=N");
+server.log("Start the countdown by browsing to " + http.agenturl() + "?count=N&mmi=N&type=0");
 
 // HTTP Request handlers expect two parameters:
 // request: the incoming request
