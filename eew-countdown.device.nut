@@ -489,13 +489,11 @@ function initialFlash(MMI) {
 
 function countdown(countdownDelay,MMI,type) {
     // Display countdown to S-wave arrival
-    
-    local brightness=1;
     server.log("countdown called with numLitPixels = "+numLitPixels);
 
     if (numLitPixels<24) {
         local green = 0;
-        if (type>0) green=5;
+        if (type>0) green=5; // If test event, leave trail of light green pixels
         pixelStrip.writePixel(numLitPixels,[0 green 0]);
     }
 
