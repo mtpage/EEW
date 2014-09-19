@@ -11,9 +11,6 @@
 const SPICLK = 7500; // kHz
 // const SPICLK = 3750; // kHz
 
-// const PALETTE = 0; // Colors matching Shakemap 
-const PALETTE = 1; // Morgan's color palette with more resolution at lower intensities
-
 // This is used for timing testing only
 us <- hardware.micros.bindenv(hardware);
 
@@ -402,50 +399,45 @@ seconds <- 10;
 
 seconds = seconds - 1;
 
-function colorForMMI(MMI, PALETTE) {
+function colorForMMI(MMI) {
 // Returns RGB color for a given MMI intensity
-// Supports ShakeMap color pallete (PALETTE=0) or Morgan's colors (PALETTE=1)
+// Matches ShakeMap colors for MMI>=2, shows BLUE for MMI=1
     local brightness=1;
     
-    local color = null; local  color0 = null; local  color1 = null;
+    local color = null; 
       switch (MMI % 10) {
         case 1:
-            color0 = [0 0 brightness*255]; color1 = [0 0 brightness*255]; 
+            color = [0 0 brightness*255]; 
             break;
         case 2:
-            color0 = [0 0 brightness*255]; color1 = [0 brightness*255 0]; 
+            color = [brightness*50 brightness*50 brightness*255]; 
             break;
         case 3:
-            color0 = [0 0 brightness*255]; color1 = [brightness*75 brightness*255 0]; 
+            color = [0 brightness*255 brightness*255]; 
             break;
         case 4:
-            color0 = [brightness*75 brightness*75 brightness*255]; color1 = [brightness*200 brightness*255 0]; 
+            color = [0 brightness*255 brightness*100]; 
             break;
         case 5:
-            color0 = [0 brightness*255 0]; color1 = [brightness*255 brightness*255 0]; 
+            color = [brightness*100 brightness*255 0]; 
             break;
         case 6:
-            color0 = [brightness*255 brightness*255 0]; color1 = [brightness*255 brightness*64 0]; 
+            color = [brightness*255 brightness*255 0]; 
             break;
         case 7:
-            color0 = [brightness*255 brightness*127 brightness*80]; color1 = [brightness*255 brightness*32 0]; 
+            color = [brightness*255 brightness*100 0]; 
             break; 
         case 8:
-            color0 = [brightness*200 brightness*120 0]; color1 = [brightness*255 0 0]; 
+            color = [brightness*255 brightness*50 0]; 
             break;
         case 9:
-            color0 = [brightness*255 0 0]; color1 = [brightness*255 0 0]; 
+            color = [brightness*255 0 0]; 
             break;
         default:
-            color0 = [brightness*255 0 0]; color1 = [brightness*255 0 0]; 
+            color = [brightness*100 0 0]; 
             break;
       }
     
-    if (PALETTE == 1) {
-        color = color1;
-    } else {
-        color = color0;
-    }
     return color;
 }
 
@@ -453,12 +445,18 @@ function initialFlash(MMI) {
 // Initial LED flash & music when new EEW message is received
 
     local brightness = 1;
-    local color = colorForMMI(MMI, PALETTE);
+    local color = colorForMMI(MMI);
+    server.log("Starting Initial Flash");
     
     // Piezo Buzzer Sounds
-    if (MMI<=5) {
+    if (MMI<=1) {
         Piezo <- Tone(hardware.pin9);
         music <- Song(Piezo, Coin);
+        music.Play();
+    }
+    if (MMI<=5 && MMI>1) {
+        Piezo <- Tone(hardware.pin9);
+        music <- Song(Piezo, UnderWorld);
         music.Play();
     }
     if (MMI>5) {
@@ -489,16 +487,16 @@ function initialFlash(MMI) {
 
 function countdown(countdownDelay,MMI,type) {
     // Display countdown to S-wave arrival
-    server.log("countdown called with numLitPixels = "+numLitPixels);
+    local brightness=1;
 
-    if (numLitPixels<NUMPIXELS) {
+    if (numLitPixels<24) {
         local green = 0;
-        if (type>0) green=5; // If test event, leave trail of light green pixels
+        if (type>0) green=5;
         pixelStrip.writePixel(numLitPixels,[0 green 0]);
     }
 
     for(local pixel = 0; pixel < numLitPixels; pixel++) {
-        local color = colorForMMI(MMI, PALETTE);
+        local color = colorForMMI(MMI);
         pixelStrip.writePixel(pixel,color);
     }
 
@@ -525,6 +523,7 @@ agent.on("count", function(data) {
     local MMI = data[1];
     local type = data[2];
     local countdownDelay = null;
+    server.log("Agent Message received!");
 
     if (wakehandle) { imp.cancelwakeup(wakehandle); }
     if (type==-1) { // cancel event
@@ -583,7 +582,7 @@ function postEarthquakeAnimation(MMI, flag) {
    for (local j=0; j<amp; j++) {
        local br = 25*factor;
        if (flag == 0) pixelStrip.writePixel(j,[br,0,0]);
-       local k = NUMPIXELS - 1 - j;
+       local k = 23 - j;
        if (flag == 1) pixelStrip.writePixel(k,[br,0,0]);
    }
    pixelStrip.writeFrame();
@@ -647,6 +646,7 @@ function rainbowSwirl() {
 Coin <- [{note = NOTE_REST, duration = 64},{note = NOTE_B5, duration = 16},{note = NOTE_E6, duration = 2}];
 OneUp <- [{note = NOTE_REST, duration = 64},{note = NOTE_REST,note = NOTE_E5, duration = 8},{note = NOTE_G5, duration = 8},{note = NOTE_E6, duration = 8},{note = NOTE_C6, duration = 8},{note = NOTE_D6, duration = 8},{note = NOTE_G7, duration = 8}];
 GameOver <- [{note = NOTE_REST, duration = 64},{note = NOTE_C5, duration = 8},{note = NOTE_REST, duration = 4},{note = NOTE_G4, duration = 8},{note = NOTE_REST, duration = 4},{note = NOTE_E4, duration = 2},{note = NOTE_A4, duration = 3},{note = NOTE_B4, duration = 3},{note = NOTE_A4, duration = 3},{note = NOTE_GS4, duration = 2},{note = NOTE_AS4, duration = 2},{note = NOTE_GS4, duration = 2},{note = NOTE_G4, duration = 0.75}];
+UnderWorld <- [{note = NOTE_REST, duration = 64},{note = NOTE_C5, duration = 8},{note = NOTE_C6, duration = 8},{note = NOTE_A4, duration = 8},{note = NOTE_A5, duration = 8},{note = NOTE_AS4, duration = 8},{note = NOTE_AS5, duration = 8}]
 
 // Imp start-up: Play "one-up" noise and begin default animation
 Piezo <- Tone(hardware.pin9);
