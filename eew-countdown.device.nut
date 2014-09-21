@@ -489,7 +489,7 @@ function countdown(countdownDelay,MMI,type) {
     // Display countdown to S-wave arrival
     local brightness=1;
 
-    if (numLitPixels<24) {
+    if (numLitPixels<NUMPIXELS) {
         local green = 0;
         if (type>0) green=5;
         pixelStrip.writePixel(numLitPixels,[0 green 0]);
@@ -582,7 +582,7 @@ function postEarthquakeAnimation(MMI, flag) {
    for (local j=0; j<amp; j++) {
        local br = 25*factor;
        if (flag == 0) pixelStrip.writePixel(j,[br,0,0]);
-       local k = 23 - j;
+       local k = NUMPIXELS - 1 - j;
        if (flag == 1) pixelStrip.writePixel(k,[br,0,0]);
    }
    pixelStrip.writeFrame();
